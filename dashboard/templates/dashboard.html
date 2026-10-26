@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecureCodeScan Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0d0d;
+      --surface:   #111111;
+      --card:      #161616;
+      --border:    #252525;
+      --green:     #4ade80;
+      --green-dim: #22c55e;
+      --text:      #f1f5f9;
+      --muted:     #6b7280;
+      --critical:  #ef4444;
+      --high:      #f97316;
+      --medium:    #eab308;
+      --low:       #4ade80;
+      --radius:    10px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 64px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .nav-brand .logo-box {
+      background: var(--green);
+      color: #000;
+      width: 34px; height: 34px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+    }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-actions { display: flex; align-items: center; gap: 14px; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 18px;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .btn-outline:hover { border-color: var(--green); color: var(--green); }
+    .btn-green {
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 8px 20px;
+      border-radius: var(--radius);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    .btn-green:hover { background: var(--green-dim); }
+    .btn-green:active { transform: scale(.97); }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 64px 40px 48px;
+      border-bottom: 1px solid var(--border);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .hero h1 { font-size: 2.8rem; font-weight: 800; line-height: 1.15; margin-bottom: 8px; }
+    .hero h1 span { color: var(--green); }
+    .hero p { color: var(--muted); font-size: 1rem; max-width: 520px; margin: 0 auto 32px; line-height: 1.7; }
+
+    /* ── SCAN FORM ── */
+    .scan-form {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      max-width: 620px;
+      margin: 0 auto 40px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .scan-form .input-prefix {
+      padding: 0 14px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      white-space: nowrap;
+      border-right: 1px solid var(--border);
+      height: 48px;
+      display: flex;
+      align-items: center;
+    }
+    .scan-form input[type="text"] {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 0 14px;
+      height: 48px;
+      font-family: 'Inter', monospace;
+    }
+    .scan-form input::placeholder { color: var(--muted); }
+    .scan-form button {
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 0 24px;
+      height: 48px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s;
+    }
+    .scan-form button:hover { background: var(--green-dim); }
+
+    /* ── STAT ROW ── */
+    .stat-row {
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      padding: 28px 0 0;
+    }
+    .stat-item { text-align: center; }
+    .stat-item .stat-value { font-size: 1.9rem; font-weight: 800; color: var(--green); }
+    .stat-item .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── MAIN LAYOUT ── */
+    main { max-width: 1200px; margin: 0 auto; padding: 48px 40px 80px; }
+
+    /* ── SECTION HEADER ── */
+    .section-header { text-align: center; margin-bottom: 40px; }
+    .section-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      color: var(--green);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .section-header h2 { font-size: 1.9rem; font-weight: 800; }
+    .section-header h2 span { color: var(--green); }
+
+    /* ── SUMMARY GRID ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .summary-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color .2s, transform .2s;
+    }
+    .summary-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .summary-card .sc-icon {
+      width: 38px; height: 38px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .summary-card .sc-label { font-size: 0.8rem; color: var(--muted); }
+    .summary-card .sc-value { font-size: 2rem; font-weight: 800; }
+    .summary-card .sc-desc { font-size: 0.75rem; color: var(--muted); }
+    .icon-critical { background: rgba(239,68,68,.15); color: var(--critical); }
+    .icon-high     { background: rgba(249,115,22,.15); color: var(--high); }
+    .icon-medium   { background: rgba(234,179,8,.15);  color: var(--medium); }
+    .icon-low      { background: rgba(74,222,128,.15); color: var(--low); }
+    .val-critical  { color: var(--critical); }
+    .val-high      { color: var(--high); }
+    .val-medium    { color: var(--medium); }
+    .val-low       { color: var(--low); }
+
+    /* ── RISK SCORE + AI CARDS ── */
+    .two-col { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 40px; }
+
+    .risk-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .risk-card .rc-label { font-size: 0.8rem; color: var(--muted); }
+    .risk-card .rc-score { font-size: 3.4rem; font-weight: 800; color: var(--green); line-height: 1; }
+    .risk-card .rc-sub { font-size: 0.78rem; color: var(--muted); }
+    .risk-bar-wrap { background: var(--border); border-radius: 999px; height: 6px; overflow: hidden; }
+    .risk-bar { height: 6px; border-radius: 999px; background: var(--green); transition: width .6s ease; }
+    .risk-legend { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+    .ai-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ai-card-header { display: flex; align-items: center; gap: 10px; }
+    .ai-icon {
+      background: rgba(74,222,128,.12);
+      color: var(--green);
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .ai-card-header h3 { font-size: 1rem; font-weight: 700; }
+    .ai-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.75; }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .feature-card .fc-icon {
+      color: var(--green);
+      font-size: 1.2rem;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .feature-card h3 { font-size: 1rem; font-weight: 600; }
+    .feature-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── FINDINGS TABLE ── */
+    .findings-section { margin-bottom: 48px; }
+    .findings-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .findings-header h2 { font-size: 1.1rem; font-weight: 700; }
+    .findings-count {
+      background: rgba(74,222,128,.12);
+      color: var(--green);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(74,222,128,.25);
+    }
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: var(--surface); }
+    th {
+      padding: 13px 18px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 13px 18px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background .15s; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    .badge-sev {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .sev-critical { background: rgba(239,68,68,.15); color: var(--critical); border: 1px solid rgba(239,68,68,.3); }
+    .sev-high     { background: rgba(249,115,22,.15); color: var(--high);     border: 1px solid rgba(249,115,22,.3); }
+    .sev-medium   { background: rgba(234,179,8,.15);  color: var(--medium);   border: 1px solid rgba(234,179,8,.3); }
+    .sev-low      { background: rgba(74,222,128,.15); color: var(--low);      border: 1px solid rgba(74,222,128,.3); }
+    .file-cell { font-family: 'Courier New', monospace; font-size: 0.78rem; color: var(--muted); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .line-badge {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-family: 'Courier New', monospace;
+    }
+    .empty-row td { text-align: center; padding: 40px; color: var(--muted); font-size: 0.88rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    footer .footer-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text); }
+    footer .footer-brand .logo-box { background: var(--green); color: #000; width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 800; }
+
+    /* ── FLASH / LOADING STATE ── */
+    .scanning-banner {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .scanning-banner.active { display: flex; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .scanning-banner p { color: var(--text); font-size: 0.95rem; }
+
+    @media (max-width: 900px) {
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero h1 { font-size: 2rem; }
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      main { padding: 32px 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="scanning-banner" id="scanningBanner">
+  <div class="spinner"></div>
+  <p>Scanning repository&hellip; this may take a moment.</p>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="logo-box">&lt;/&gt;</div>
+    SecureCodeScan
+  </div>
+  <div class="nav-links">
+    <a href="#">Overview</a>
+    <a href="#">Findings</a>
+    <a href="#">Reports</a>
+    <a href="#">Docs</a>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-outline" type="button">Sign In</button>
+    <button class="btn-green" type="button">New Scan &rarr;</button>
+  </div>
+</nav>
+
+<!-- HERO + SCAN FORM -->
+<section class="hero">
+  <div class="badge"><span class="dot"></span> v2.0 &mdash; AI-Powered Analysis</div>
+  <h1>Scan smarter with<br><span>secure code tools</span></h1>
+  <p>Detect hardcoded secrets, SQL injection, command injection, and weak crypto across your GitHub repositories in seconds.</p>
+
+  <form class="scan-form" method="POST" action="/scan" id="scanForm">
+    <span class="input-prefix">&#128279;</span>
+    <input type="text" name="repo_url" placeholder="https://github.com/owner/repo" required />
+    <button type="submit">Run Scan &rarr;</button>
+  </form>
+
+  <div class="stat-row">
+    <div class="stat-item">
+      <div class="stat-value">{{ metrics["CRITICAL"] + metrics["HIGH"] + metrics["MEDIUM"] + metrics["LOW"] }}</div>
+      <div class="stat-label">Total Findings</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">{{ risk_score }}</div>
+      <div class="stat-label">Risk Score</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">4</div>
+      <div class="stat-label">Scan Engines</div>
+    </div>
+  </div>
+</section>
+
+<main>
+
+  <!-- SUMMARY CARDS -->
+  <div class="section-header">
+    <div class="section-tag">SCAN RESULTS</div>
+    <h2>Everything you need to <span>ship securely</span></h2>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="sc-icon icon-critical">&#9888;</div>
+      <div class="sc-label">CRITICAL</div>
+      <div class="sc-value val-critical">{{ metrics["CRITICAL"] }}</div>
+      <div class="sc-desc">Immediate action required</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-icon icon-high">&#128293;</div>
+      <div class="sc-label">HIGH</div>
+      <div class="sc-value val-high">{{ metrics["HIGH"] }}</div>
+      <div class="sc-desc">Fix before next release</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-icon icon-medium">&#9679;</div>
+      <div class="sc-label">MEDIUM</div>
+      <div class="sc-value val-medium">{{ metrics["MEDIUM"] }}</div>
+      <div class="sc-desc">Address in current sprint</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-icon icon-low">&#10003;</div>
+      <div class="sc-label">LOW</div>
+      <div class="sc-value val-low">{{ metrics["LOW"] }}</div>
+      <div class="sc-desc">Best-practice improvements</div>
+    </div>
+  </div>
+
+  <!-- RISK SCORE + AI RECOMMENDATION -->
+  <div class="two-col">
+    <div class="risk-card">
+      <div>
+        <div class="rc-label">OVERALL RISK SCORE</div>
+        {% set max_score = 100 %}
+        {% set pct = [(risk_score / max_score * 100) | int, 100] | min %}
+        <div class="rc-score">{{ risk_score }}</div>
+        <div class="rc-sub">out of ~100 (weighted severity)</div>
+      </div>
+      <div>
+        <div class="risk-bar-wrap">
+          <div class="risk-bar" style="width: {{ pct }}%;
+            background: {% if pct >= 70 %}var(--critical){% elif pct >= 40 %}var(--high){% elif pct >= 20 %}var(--medium){% else %}var(--green){% endif %};"></div>
+        </div>
+        <div class="risk-legend"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+      <div class="rc-sub">
+        {% if risk_score == 0 %}No issues found &mdash; looking clean!
+        {% elif risk_score < 20 %}Low risk &mdash; minor improvements recommended.
+        {% elif risk_score < 50 %}Moderate risk &mdash; review flagged findings.
+        {% else %}High risk &mdash; address critical issues immediately.
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <div class="ai-icon">&#10024;</div>
+        <h3>AI Recommendation</h3>
+      </div>
+      <p>
+        {{ ai_recommendation or "No AI recommendation available yet. Run a scan to generate intelligent advice about your repository's security posture." }}
+      </p>
+    </div>
+  </div>
+
+  <!-- SCANNER FEATURE CARDS -->
+  <div class="section-header">
+    <div class="section-tag">SCAN ENGINES</div>
+    <h2>Four engines, <span>one command</span></h2>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="fc-icon">&#128273;</div>
+      <h3>Secret Scanner</h3>
+      <p>Detects hardcoded API keys, passwords, tokens, and credentials committed directly to source files.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">&#128202;</div>
+      <h3>SQL Injection</h3>
+      <p>Identifies unsafe database query constructions that could expose your application to injection attacks.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">&#9889;</div>
+      <h3>Command Injection</h3>
+      <p>Flags dangerous shell command patterns where user input may flow into OS-level execution calls.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">&lt;/&gt;</div>
+      <h3>Crypto Scanner</h3>
+      <p>Catches usage of deprecated or weak cryptographic algorithms such as MD5, SHA1, and DES.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">&#128640;</div>
+      <h3>AST Engine</h3>
+      <p>Deep Python AST analysis for precise, low-noise detection beyond simple pattern matching.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">&#129302;</div>
+      <h3>AI Advisor</h3>
+      <p>Summarizes findings and generates actionable remediation advice using an AI language model.</p>
+    </div>
+  </div>
+
+  <!-- FINDINGS TABLE -->
+  <div class="findings-section">
+    <div class="findings-header">
+      <h2>Security Findings</h2>
+      <span class="findings-count">
+        {{ findings | length }} finding{% if findings | length != 1 %}s{% endif %}
+      </span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Type</th>
+            <th>File</th>
+            <th>Line</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if findings %}
+            {% for f in findings %}
+            <tr>
+              <td>
+                {% set sev = f.severity | upper %}
+                <span class="badge-sev
+                  {% if sev == 'CRITICAL' %}sev-critical
+                  {% elif sev == 'HIGH' %}sev-high
+                  {% elif sev == 'MEDIUM' %}sev-medium
+                  {% else %}sev-low{% endif %}">
+                  {% if sev == 'CRITICAL' %}&#9888;
+                  {% elif sev == 'HIGH' %}&#128293;
+                  {% elif sev == 'MEDIUM' %}&#9679;
+                  {% else %}&#10003;{% endif %}
+                  {{ f.severity }}
+                </span>
+              </td>
+              <td>{{ f.type }}</td>
+              <td>
+                <span class="file-cell" title="{{ f.file }}">{{ f.file }}</span>
+              </td>
+              <td><span class="line-badge">L{{ f.line }}</span></td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr class="empty-row">
+              <td colspan="4">
+                &#10003;&nbsp; No findings yet. Run a scan to inspect a repository.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <div class="logo-box">&lt;/&gt;</div>
+    SecureCodeScan
+  </div>
+  <span>&copy; 2026 SecureCodeScan &mdash; Built for security-conscious developers.</span>
+</footer>
+
+<script>
+  // Show loading overlay while scan runs
+  document.getElementById('scanForm').addEventListener('submit', function () {
+    document.getElementById('scanningBanner').classList.add('active');
+  });
+</script>
+</body>
+</html>
